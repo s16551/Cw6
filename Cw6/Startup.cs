@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Cw6.Middleware;
 using Cw6.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -53,29 +54,34 @@ namespace Cw6
             });
 
             //Middlwere - Index
+            app.UseMiddleware<LoggingMiddleware>();
+            app.UseWhen(context => context.Request.Path.ToString().Contains("secret"), app =>
+           {
+               app.Use(async (context, next) =>
+               {
+                   if (!context.Request.Headers.ContainsKey("Index"))
+                   {
+                       context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                       await context.Response.WriteAsync("Musisz podaæ numer indeksu");
+                       return;
+                   }
 
-            app.Use(async (context, next) => 
-            {
-                if (!context.Request.Headers.ContainsKey("Index"))
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("Musisz podaæ numer indeksu");
-                    return; 
-                }
+                   string index = context.Request.Headers["Index"].ToString();
+                   var stud = service.GetStudent(index);
+                   if (stud == null)
+                   {
+                       context.Response.StatusCode = StatusCodes.Status404NotFound;
+                       await context.Response.WriteAsync("Student not found");
+                       return;
+                   }
 
-                string index = context.Request.Headers["Index"].ToString();
-                var stud = service.GetStudent(index);
-                if (stud == null)
-                {
-                    context.Response.StatusCode = StatusCodes.Status404NotFound;
-                    await context.Response.WriteAsync("Student not found");
-                    return;
-                }
-
-                await next();
-            });
-
+                   await next();
+               });
+           });
+            
             app.UseHttpsRedirection();
+
+            app.UseMiddleware<LoggingMiddleware>();
 
             app.UseRouting();
 
