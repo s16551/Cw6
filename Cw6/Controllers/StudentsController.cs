@@ -16,12 +16,18 @@ namespace Cw6.Controllers
         public IActionResult GetStudents()
         {
             var list = new List<Student>();
-            list.Add(new Student { IdStudent = 1, FirstName = "Jan", LastName="Kowalski" });
+            list.Add(new Student { IdStudent = 1, FirstName = "Jan", LastName = "Kowalski" });
             list.Add(new Student { IdStudent = 2, FirstName = "Andrzej", LastName = "Malewski" });
 
 
 
             return Ok();
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetStudents(int id)
+        {
+            return Ok(new Student { IdStudent = 1, FirstName = "Andrzej", LastName = "Malewski" });
         }
     }
 }
